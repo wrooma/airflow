@@ -22,6 +22,7 @@ from typing import Annotated
 
 from fastapi import Depends, status
 from sqlalchemy import and_, func, select
+from sqlalchemy.orm import noload
 
 from airflow.api_fastapi.auth.managers.models.resource_details import DagAccessEntity
 from airflow.api_fastapi.common.db.common import (
@@ -207,6 +208,12 @@ def get_dags(
             DagRun.id,
         )
         .order_by(recent_runs_subquery.c.run_after.desc())
+        .options(
+            noload(DagRun.task_instances),
+            noload(DagRun.task_instances_histories),
+            noload(DagRun.dag_run_note),
+            noload(DagRun.deadlines),
+        )
     )
 
     recent_dag_runs = session.execute(recent_dag_runs_select)
